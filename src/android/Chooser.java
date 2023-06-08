@@ -26,7 +26,7 @@ public class Chooser extends CordovaPlugin {
 	private static final int PICK_FILE_REQUEST = 1;
 	private static final String TAG = "Chooser";
 
-	/** @see https://stackoverflow.com/a/17861016/459881 */
+
 	public static byte[] getBytesFromInputStream (InputStream is) throws IOException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		byte[] buffer = new byte[0xFFFF];
@@ -38,7 +38,6 @@ public class Chooser extends CordovaPlugin {
 		return os.toByteArray();
 	}
 
-	/** @see https://stackoverflow.com/a/23270545/459881 */
 	public static String getDisplayName (ContentResolver contentResolver, Uri uri) {
 		String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
 		Cursor metaCursor = contentResolver.query(uri, projection, null, null, null);
@@ -56,7 +55,21 @@ public class Chooser extends CordovaPlugin {
 		return "File";
 	}
 
+  public static String getDisplaySize (ContentResolver contentResolver, Uri uri) {
+    String[] projection = {MediaStore.MediaColumns.SIZE};
+    Cursor metaCursor = contentResolver.query(uri, projection, null, null, null);
 
+    if (metaCursor != null) {
+      try {
+        if (metaCursor.moveToFirst()) {
+          return metaCursor.getString(0);
+        }
+      } finally {
+        metaCursor.close();
+      }
+    }
+    return "Size";
+  }
 	private CallbackContext callback;
 	private Boolean includeData;
 
@@ -112,6 +125,7 @@ public class Chooser extends CordovaPlugin {
 						;
 
 						String name = Chooser.getDisplayName(contentResolver, uri);
+            String size =Chooser.getDisplaySize(contentResolver,uri);
 
 						String mediaType = contentResolver.getType(uri);
 						if (mediaType == null || mediaType.isEmpty()) {
@@ -133,6 +147,7 @@ public class Chooser extends CordovaPlugin {
 						result.put("data", base64);
 						result.put("mediaType", mediaType);
 						result.put("name", name);
+            result.put("size", size);
 						result.put("uri", uri.toString());
 
 						this.callback.success(result.toString());
